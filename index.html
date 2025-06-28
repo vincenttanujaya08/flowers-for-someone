@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detak Hatiku</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital@1&display=swap" rel="stylesheet">
+    <style>
+        /* * ===============================================
+         * CSS untuk Gaya dan Animasi
+         * ===============================================
+        */
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Crimson Text', serif;
+            background-color: #0d0d0d;
+        }
+
+        /* Kontainer utama dengan transisi untuk fade-out */
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-image: radial-gradient(circle at center, rgba(50, 20, 20, 0.3), #0d0d0d 75%);
+            transition: opacity 0.8s ease-out;
+            /* Transisi untuk menghilang */
+        }
+
+        /* Class untuk memicu fade-out */
+        .main-container.fade-out {
+            opacity: 0;
+        }
+
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d0d0d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.5rem;
+            font-style: italic;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        #preloader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .heart-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #heartImage {
+            width: 350px;
+            max-width: 80vw;
+            filter: brightness(0.6) saturate(1.1);
+            transition: transform 0.1s ease-out, filter 0.2s ease-out, opacity 1.5s ease-in-out;
+            opacity: 0;
+        }
+
+        #heartImage.visible {
+            opacity: 1;
+        }
+
+        .heart-wrapper:hover #heartImage.visible {
+            filter: brightness(1.0) saturate(1.2);
+        }
+
+        #heartImage.clicked {
+            transform: scale(1.05);
+        }
+
+        #heartImage.lit-up {
+            filter: brightness(1.1) saturate(1.2);
+        }
+
+        #particlesCanvas,
+        #ekgCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #particlesCanvas {
+            z-index: 1;
+        }
+
+        #ekgCanvas {
+            z-index: 2;
+        }
+
+        .hover-light {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255, 255, 224, 0.2) 0%, rgba(255, 255, 224, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 11;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.4s ease;
+        }
+
+        .tagline {
+            margin-top: 35px;
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            letter-spacing: 0.5px;
+            text-align: center;
+            max-width: 90%;
+            text-shadow: 0 0 10px rgba(255, 180, 180, 0.2);
+            z-index: 10;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        #tagline,
+        #click-counter {
+            opacity: 0;
+        }
+
+        #hint-text {
+            position: absolute;
+            opacity: 1;
+        }
+
+        #gift-icon {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            font-size: 2.5rem;
+            cursor: pointer;
+            z-index: 99;
+            transform: translateY(150px);
+            /* Mulai dari bawah layar */
+            opacity: 0;
+            transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s;
+        }
+
+        #gift-icon.visible {
+            transform: translateY(0);
+            opacity: 0.7;
+            animation: bounce 2s 1.5s ease-in-out infinite, gift-glow 2s 1.5s ease-in-out infinite;
+        }
+
+        #gift-icon:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes gift-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700;
+            }
+
+            50% {
+                text-shadow: 0 0 15px #ffd700, 0 0 25px #ffd700;
+            }
+        }
+
+        #gift-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s, visibility 0.4s;
+        }
+
+        #gift-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gift-content {
+            background: #2b2b2b;
+            padding: 30px 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.4s;
+        }
+
+        #gift-modal.visible .gift-content {
+            transform: scale(1);
+        }
+
+        .bunny-emoji {
+            font-size: 4rem;
+            margin-bottom: 5px;
+        }
+
+        .gift-content h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            color: #ffd700;
+            font-style: italic;
+        }
+
+        .gift-subtext {
+            margin: 0;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #close-gift {
+            margin-top: 30px;
+            padding: 10px 20px;
+            border: 1px solid #ffd700;
+            background: transparent;
+            color: #ffd700;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #close-gift:hover {
+            background: #ffd700;
+            color: #2b2b2b;
+        }
+
+        .pulsing-glow-ring {
+            position: absolute;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            animation: pulse-glow 2.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 9;
+            transition: opacity 0.8s ease-out;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 20px rgba(255, 100, 100, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 100, 100, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(255, 100, 100, 0.2);
+            }
+        }
+
+        #tagline {
+            position: absolute;
+            bottom: 15vh;
+        }
+
+        #click-counter {
+            position: absolute;
+            bottom: 10vh;
+            font-size: 1.1rem;
+            color: rgba(255, 215, 0, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="preloader">
+        <p>apaa yaaa iniii...</p>
+    </div>
+
+    <div id="main-container" class="main-container">
+        <canvas id="particlesCanvas"></canvas>
+        <canvas id="ekgCanvas"></canvas>
+
+        <div class="heart-wrapper" id="heartWrapper">
+            <div class="pulsing-glow-ring" id="pulsingGlowRing"></div>
+            <p id="hint-text" class="tagline">Click here...</p>
+            <img id="heartImage" src="heartpic.png" alt="Jantung Anatomis"
+                onerror="this.onerror=null; this.parentElement.innerHTML += '<p style=\'color:white; text-align:center;\'>Gagal memuat gambar.<br>Pastikan `heartpic.png` ada di folder yang sama.</p>'; this.style.display='none';">
+            <div class="hover-light" id="hoverLight"></div>
+        </div>
+
+        <p id="tagline" class="tagline">"...if you keep someone in your heart, you keep them in something that makes you
+            alive."</p>
+        <p id="click-counter" class="tagline"></p>
+
+        <div id="gift-icon">🎁</div>
+        <div id="gift-modal">
+            <div class="gift-content">
+                <div class="bunny-emoji">🐰🎂</div>
+                <h2>HALO</h2>
+                <p class="gift-subtext">klik jantungnyaa dluu</p>
+                <button id="close-gift">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="background-music" loop
+        src="https://www.chosic.com/wp-content/uploads/2021/04/When-I-Was-A-Boy-chosic.com_.mp3"></audio>
+    <audio id="heartbeat-sound"
+        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_3ef3c04870.mp3?filename=heart-beat-01.mp3"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContainer = document.getElementById('main-container');
+            const heartWrapper = document.getElementById('heartWrapper');
+            const heartImage = document.getElementById('heartImage');
+            const hoverLight = document.getElementById('hoverLight');
+            const ekgCanvas = document.getElementById('ekgCanvas');
+            const ekgCtx = ekgCanvas.getContext('2d');
+            const particlesCanvas = document.getElementById('particlesCanvas');
+            const particlesCtx = particlesCanvas.getContext('2d');
+            const giftIcon = document.getElementById('gift-icon');
+            const giftModal = document.getElementById('gift-modal');
+            const closeGiftBtn = document.getElementById('close-gift');
+            const preloader = document.getElementById('preloader');
+            const bgMusic = document.getElementById('background-music');
+            const heartbeatSound = document.getElementById('heartbeat-sound');
+            const pulsingGlowRing = document.getElementById('pulsingGlowRing');
+            const hintText = document.getElementById('hint-text');
+            const tagline = document.getElementById('tagline');
+            const clickCounterText = document.getElementById('click-counter');
+
+            let isMusicPlaying = false;
+            let isFirstClick = true;
+            let clickCount = 0;
+            const clicksNeeded = 10; // Jumlah klik yang dibutuhkan sebelum pesan terakhir
+
+            window.addEventListener('load', () => {
+                setTimeout(() => preloader.classList.add('fade-out'), 1000);
+            });
+
+            [ekgCanvas, particlesCanvas].forEach(canvas => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            window.addEventListener('resize', () => {
+                [ekgCanvas, particlesCanvas].forEach(canvas => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                });
+            });
+
+            // Logika Partikel (Tidak diubah)
+            let particlesArray = [];
+            const numberOfParticles = 50;
+            class Particle {
+                constructor() { this.x = Math.random() * particlesCanvas.width; this.y = Math.random() * particlesCanvas.height; this.size = Math.random() * 2 + 1; this.speedX = Math.random() * 0.4 - 0.2; this.speedY = Math.random() * 0.4 - 0.2; this.color = `rgba(255, 215, 100, ${Math.random() * 0.5 + 0.2})`; }
+                update() { this.x += this.speedX; this.y += this.speedY; if (this.x > particlesCanvas.width || this.x < 0) this.speedX *= -1; if (this.y > particlesCanvas.height || this.y < 0) this.speedY *= -1; }
+                draw() { particlesCtx.fillStyle = this.color; particlesCtx.beginPath(); particlesCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2); particlesCtx.fill(); }
+            }
+            function initParticles() { for (let i = 0; i < numberOfParticles; i++) particlesArray.push(new Particle()); }
+            function animateParticles() { particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height); particlesArray.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
+            initParticles(); animateParticles();
+
+            // Logika EKG (Tidak diubah)
+            let activeBeats = [];
+            const ekgPoints = [{ x: 0, y: 0 }, { x: 25, y: 0 }, { x: 35, y: -60 }, { x: 45, y: 0 }, { x: 75, y: 0 }, { x: 85, y: 90 }, { x: 95, y: -180 }, { x: 105, y: 0 }, { x: 135, y: 0 }, { x: 145, y: -60 }, { x: 155, y: 0 }, { x: 180, y: 0 }];
+            const ekgWidth = ekgPoints[ekgPoints.length - 1].x;
+
+            function triggerHeartbeat() {
+                if (isFirstClick) {
+                    isFirstClick = false;
+                    hintText.style.opacity = '0';
+                    pulsingGlowRing.style.opacity = '0';
+                    heartImage.classList.add('visible');
+                    animateFirstBeat();
+
+                    setTimeout(() => {
+                        tagline.style.opacity = '1';
+                        clickCounterText.innerText = `Keep clicking the heart... (${clicksNeeded} more times)`;
+                        clickCounterText.style.opacity = '1';
+                        giftIcon.classList.add('visible'); // Ikon hadiah muncul bersamaan
+                    }, 2500);
+
+                } else {
+                    if (tagline.style.opacity !== '1' || mainContainer.classList.contains('fade-out')) {
+                        return; // Mencegah klik selama animasi awal atau saat fade-out
+                    }
+
+                    clickCount++;
+
+                    // Mainkan suara dan animasi untuk setiap klik
+                    if (!isMusicPlaying) {
+                        bgMusic.volume = 0.3; bgMusic.play(); isMusicPlaying = true;
+                    }
+                    heartbeatSound.currentTime = 0; heartbeatSound.play();
+
+                    heartImage.classList.add('clicked', 'lit-up');
+                    setTimeout(() => heartImage.classList.remove('clicked', 'lit-up'), 200);
+
+                    const beat = { startX: Math.random() * (ekgCanvas.width - ekgWidth), startY: ekgCanvas.height / 2, alpha: 1, };
+                    activeBeats.push(beat);
+                    if (activeBeats.length === 1) animateRandomBeats();
+
+                    // Logika counter dan pengalihan halaman yang disempurnakan
+                    if (clickCount < clicksNeeded) { // Klik ke-1 hingga ke-9 (setelah klik pertama)
+                        const remaining = clicksNeeded - clickCount;
+                        clickCounterText.innerText = `Keep clicking... ${remaining} more time${remaining > 1 ? 's' : ''}.`;
+                    } else if (clickCount === clicksNeeded) { // Klik ke-10
+                        clickCounterText.innerText = "Okay, one last beat...";
+                    } else { // Klik ke-11 (klik terakhir)
+                        clickCounterText.style.opacity = '0';
+                        tagline.style.opacity = '0';
+
+                        mainContainer.classList.add('fade-out');
+
+                        setTimeout(() => {
+                            window.location.href = 'index2.html';
+                        }, 800); // Durasi harus cocok dengan transisi di CSS (0.8s)
+                    }
+                }
+            }
+
+            function animateFirstBeat() {
+                let currentX = 0; const speed = 8; const centerY = ekgCanvas.height / 2; const beatStartX = (ekgCanvas.width - ekgWidth) / 2; let soundPlayed = false;
+                function firstBeatLoop() {
+                    ekgCtx.clearRect(0, 0, ekgCanvas.width, ekgCanvas.height); ekgCtx.beginPath(); ekgCtx.moveTo(0, centerY);
+                    if (currentX < beatStartX) { ekgCtx.lineTo(currentX, centerY); } else { ekgCtx.lineTo(beatStartX, centerY); ekgPoints.forEach(p => { if (beatStartX + p.x <= currentX) { ekgCtx.lineTo(beatStartX + p.x, centerY + p.y); } }); }
+                    if (currentX > beatStartX + ekgWidth) { ekgCtx.lineTo(currentX, centerY); }
+                    ekgCtx.strokeStyle = 'rgba(255, 80, 80, 0.7)'; ekgCtx.lineWidth = 3; ekgCtx.shadowColor = 'rgba(255, 80, 80, 0.2)'; ekgCtx.shadowBlur = 15; ekgCtx.stroke(); ekgCtx.shadowBlur = 0;
+                    if (currentX > beatStartX + 85 && !soundPlayed) { if (!isMusicPlaying) { bgMusic.volume = 0.3; bgMusic.play(); isMusicPlaying = true; } heartbeatSound.currentTime = 0; heartbeatSound.play(); heartImage.classList.add('clicked', 'lit-up'); setTimeout(() => heartImage.classList.remove('clicked', 'lit-up'), 200); soundPlayed = true; }
+                    currentX += speed;
+                    if (currentX < ekgCanvas.width + 50) { requestAnimationFrame(firstBeatLoop); } else { ekgCtx.clearRect(0, 0, ekgCanvas.width, ekgCanvas.height); }
+                }
+                firstBeatLoop();
+            }
+
+            function animateRandomBeats() {
+                ekgCtx.clearRect(0, 0, ekgCanvas.width, ekgCanvas.height); ekgCtx.beginPath(); ekgCtx.moveTo(0, ekgCanvas.height / 2); ekgCtx.lineTo(ekgCanvas.width, ekgCanvas.height / 2); ekgCtx.strokeStyle = 'rgba(255, 80, 80, 0.1)'; ekgCtx.lineWidth = 1; ekgCtx.stroke();
+                for (let i = activeBeats.length - 1; i >= 0; i--) {
+                    const beat = activeBeats[i]; ekgCtx.beginPath(); ekgCtx.moveTo(beat.startX - 50, beat.startY); ekgPoints.forEach(p => ekgCtx.lineTo(beat.startX + p.x, beat.startY + p.y)); const lastPointX = ekgPoints[ekgPoints.length - 1].x; ekgCtx.lineTo(beat.startX + lastPointX + 50, beat.startY);
+                    const waveColor = `rgba(255, 80, 80, ${beat.alpha * 0.7})`; const glowColor = `rgba(255, 80, 80, ${beat.alpha * 0.2})`; ekgCtx.strokeStyle = waveColor; ekgCtx.lineWidth = 3; ekgCtx.shadowColor = glowColor; ekgCtx.shadowBlur = 15; ekgCtx.stroke(); ekgCtx.shadowBlur = 0; beat.alpha -= 0.01;
+                    if (beat.alpha <= 0) activeBeats.splice(i, 1);
+                }
+                if (activeBeats.length > 0) requestAnimationFrame(animateRandomBeats);
+            }
+
+            if (heartWrapper) { heartWrapper.addEventListener('click', triggerHeartbeat); heartWrapper.addEventListener('mousemove', (e) => { if (!isFirstClick) { const rect = heartWrapper.getBoundingClientRect(); hoverLight.style.left = `${e.clientX - rect.left}px`; hoverLight.style.top = `${e.clientY - rect.top}px`; } }); heartWrapper.addEventListener('mouseenter', () => { if (!isFirstClick) hoverLight.style.opacity = '1'; }); heartWrapper.addEventListener('mouseleave', () => { hoverLight.style.opacity = '0'; }); }
+            giftIcon.addEventListener('click', () => giftModal.classList.add('visible')); closeGiftBtn.addEventListener('click', () => giftModal.classList.remove('visible')); giftModal.addEventListener('click', (e) => { if (e.target === giftModal) giftModal.classList.remove('visible'); });
+        });
+    </script>
+</body>
+
+</html>
